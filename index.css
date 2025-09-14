@@ -1,0 +1,7 @@
+@tailwind base;
+body {
+    font-family: 'Inter', sans-serif;
+    @apply bg-background text-text-main; /* This applies our new colors */
+}
+@tailwind components;
+@tailwind utilities;

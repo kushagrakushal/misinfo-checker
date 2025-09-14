@@ -7,12 +7,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#0B111E', // Even darker, deeper navy
-        surface: '#1F2937',
-        primary: '#0EA5E9',    // A slightly richer sky blue (from sky-500)
-        'primary-hover': '#38BDF8', // Lighter for hover (from sky-400)
-        secondary: '#4B5563',
-        accent: '#F472B6',
+        background: '#111827', // A dark navy
+        surface: '#1F2937',    // A slightly lighter gray-blue
+        primary: '#38BDF8',    // A vibrant sky blue for accents
+        secondary: '#4B5563',  // Muted gray for secondary text/borders
+        accent: '#F472B6',     // A pink accent for ratings or highlights
         'text-main': '#E5E7EB',
         'text-secondary': '#9CA3AF',
       },
@@ -22,7 +21,5 @@ export default {
       }
     },
   },
-  plugins: [
-    require('@tailwindcss/typography'), // Add this plugin
-  ],
+  plugins: [],
 }
