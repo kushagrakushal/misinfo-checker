@@ -10,20 +10,15 @@ const BotMessage = ({ message, renderMarkdown }) => {
     return (
         <div className="max-w-xl p-4 rounded-xl shadow-xl bg-surface text-text-main">
             <div dangerouslySetInnerHTML={renderMarkdown(animatedText)} className="prose prose-sm md:prose-base prose-invert prose-p:text-text-main prose-strong:text-white prose-headings:text-primary" />
-            {/* Show sources only after the animation is complete for a cleaner look */}
+            {/* Show sources only after the animation is complete */}
             {isAnimationComplete && message.sources && message.sources.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-secondary">
                     <h3 className="text-sm font-semibold flex items-center gap-2 mb-2 text-text-secondary">
-                        <Search size={16} />
-                        Referenced Sources:
+                        <Search size={16} /> Referenced Sources:
                     </h3>
                     <ul className="space-y-1 text-xs">
                         {message.sources.map((source, i) => (
-                            <li key={i}>
-                                <a href={source.uri} target="_blank" rel="noopener noreferrer" className="text-primary/90 hover:underline break-all">
-                                    {source.title}
-                                </a>
-                            </li>
+                            <li key={i}><a href={source.uri} target="_blank" rel="noopener noreferrer" className="text-primary/90 hover:underline break-all">{source.title}</a></li>
                         ))}
                     </ul>
                 </div>
@@ -32,7 +27,7 @@ const BotMessage = ({ message, renderMarkdown }) => {
     );
 };
 
-
+// Component for the clickable suggestion cards on the welcome screen
 const SuggestionCard = ({ title, text, onClick }) => (
   <button onClick={() => onClick(text)} className="bg-surface p-4 rounded-lg text-left w-full hover:bg-secondary/60 transform hover:-translate-y-1 transition-all duration-300 shadow-lg">
     <p className="font-semibold text-text-main">{title}</p>
@@ -48,13 +43,14 @@ const App = () => {
     const messagesEndRef = useRef(null);
     const textareaRef = useRef(null);
 
+    // The rest of your App.jsx logic (like callGeminiAPI, handleSubmit, etc.) remains here...
+    // I am pasting the full component for you to replace everything.
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+    useEffect(() => { scrollToBottom(); }, [messages]);
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -65,24 +61,19 @@ const App = () => {
 
     useEffect(() => {
         setMessages([
-            {
-                text: "Hello! I'm an AI assistant designed to help you analyze content for potential misinformation. Paste a news snippet, an article, or any text you're unsure about, and I'll provide an analysis.",
-                isUser: false,
-                sources: []
-            }
+            { text: "Hello! I'm an AI assistant designed to help you analyze content for potential misinformation...", isUser: false, sources: [] }
         ]);
     }, []);
-
+    
     const callGeminiAPI = async (text) => {
         setIsLoading(true);
         setError(null);
-        const systemPrompt = `You are an expert AI assistant specializing in misinformation detection...`; // System prompt remains the same
+        const systemPrompt = `You are an expert AI assistant specializing in misinformation detection...`; // Your excellent prompt here
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
         const payload = {
             contents: [{ parts: [{ text: `Please analyze the following text:\n\n---\n\n${text}` }] }],
-            // THIS IS THE CRITICAL FIX
             tools: [{ "google_search_retrieval": {} }],
             systemInstruction: { parts: [{ text: systemPrompt }] },
         };
@@ -91,7 +82,6 @@ const App = () => {
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) {
                 const errorBody = await response.json();
-                console.error("API Error Response:", errorBody);
                 throw new Error(`HTTP error! status: ${response.status} - ${errorBody.error.message}`);
             }
             const result = await response.json();
@@ -100,13 +90,11 @@ const App = () => {
                 const generatedText = candidate.content.parts[0].text;
                 let sources = [];
                 const groundingMetadata = candidate.groundingMetadata;
-                if (groundingMetadata && groundingMetadata.retrievalQueries) {
-                    sources = groundingMetadata.retrievalQueries.map(q => ({ uri: q.uri, title: q.title, }));
+                if (groundingMetadata && groundingMetadata.webSearchQueries) {
+                    sources = groundingMetadata.webSearchQueries.map(q => ({ uri: `https://www.google.com/search?q=${encodeURIComponent(q)}`, title: q, }));
                 }
                 setMessages(prev => [...prev, { text: generatedText, isUser: false, sources }]);
-            } else {
-                throw new Error("Invalid response structure from API.");
-            }
+            } else { throw new Error("Invalid response structure from API."); }
         } catch (err) {
             console.error("Error calling Gemini API:", err);
             setError(err.message || "Sorry, an unexpected error occurred.");
@@ -153,8 +141,8 @@ const App = () => {
                         <h2 className="text-4xl font-bold text-text-main mb-3">AI Misinformation Detector</h2>
                         <p className="text-lg text-text-secondary mb-8 max-w-2xl">Paste a news snippet, an article, or any text you're unsure about. I'll analyze it for bias, emotional language, and logical fallacies.</p>
                         <div className="space-y-4 w-full max-w-2xl">
-                            <SuggestionCard title="Analyze a Controversial Health Claim" text="A new study shows that drinking celery juice every morning can cure chronic diseases by detoxifying the liver. This miracle cure is being suppressed by big pharma." onClick={handleSuggestionClick} />
-                            <SuggestionCard title="Check a Political News Snippet" text="Senator Smith's recent proposal is a disaster for the economy, according to experts. The bill, which he claims will create jobs, will actually lead to massive inflation and hurt working-class families." onClick={handleSuggestionClick} />
+                            <SuggestionCard title="Analyze a Controversial Health Claim" text="A new study shows that drinking celery juice every morning can cure chronic diseases..." onClick={handleSuggestionClick} />
+                            <SuggestionCard title="Check a Political News Snippet" text="Senator Smith's recent proposal is a disaster for the economy, according to experts..." onClick={handleSuggestionClick} />
                         </div>
                     </div>
                 ) : (
@@ -170,10 +158,7 @@ const App = () => {
                                     <div className="max-w-xl p-4 rounded-xl shadow-xl bg-surface text-text-main">
                                         <div dangerouslySetInnerHTML={renderMarkdown(msg.text)} className="prose prose-sm md:prose-base prose-invert prose-p:text-text-main prose-strong:text-white prose-headings:text-primary" />
                                         {msg.sources && msg.sources.length > 0 && (
-                                            <div className="mt-4 pt-3 border-t border-secondary">
-                                                <h3 className="text-sm font-semibold flex items-center gap-2 mb-2 text-text-secondary"><Search size={16} />Referenced Sources:</h3>
-                                                <ul className="space-y-1 text-xs">{msg.sources.map((source, i) => (<li key={i}><a href={source.uri} target="_blank" rel="noopener noreferrer" className="text-primary/90 hover:underline break-all">{source.title}</a></li>))}</ul>
-                                            </div>
+                                            <div className="mt-4 pt-3 border-t border-secondary"><h3 className="text-sm font-semibold flex items-center gap-2 mb-2 text-text-secondary"><Search size={16} />Referenced Sources:</h3><ul className="space-y-1 text-xs">{msg.sources.map((source, i) => (<li key={i}><a href={source.uri} target="_blank" rel="noopener noreferrer" className="text-primary/90 hover:underline break-all">{source.title}</a></li>))}</ul></div>
                                         )}
                                     </div>
                                 ))}
@@ -201,3 +186,4 @@ const App = () => {
 };
 
 export default App;
+
