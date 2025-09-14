@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+    font-family: 'Inter', sans-serif;
+    
+    /* New Gradient Background */
+    background-color: #0B111E; /* Fallback color from tailwind.config.js */
+    background-image: radial-gradient(circle at top, #1F2937 0%, #0B111E 60%);
+    @apply text-text-main;
+}
