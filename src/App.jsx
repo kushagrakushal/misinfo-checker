@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Bot, User, Search, Loader, AlertTriangle, SendHorizontal } from 'lucide-react';
 import useTypewriter from './useTypewriter'; // Make sure this file exists in src/
 
-// A helper component for animating the bot's response with the typewriter effect
+// A helper component for animating the bot's response
 const BotMessage = ({ message, renderMarkdown }) => {
     const animatedText = useTypewriter(message.text);
     const isAnimationComplete = animatedText.length === message.text.length;
@@ -10,7 +10,6 @@ const BotMessage = ({ message, renderMarkdown }) => {
     return (
         <div className="max-w-xl p-4 rounded-xl shadow-xl bg-surface text-text-main">
             <div dangerouslySetInnerHTML={renderMarkdown(animatedText)} className="prose prose-sm md:prose-base prose-invert prose-p:text-text-main prose-strong:text-white prose-headings:text-primary" />
-            {/* Show sources only after the animation is complete */}
             {isAnimationComplete && message.sources && message.sources.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-secondary">
                     <h3 className="text-sm font-semibold flex items-center gap-2 mb-2 text-text-secondary">
@@ -27,7 +26,7 @@ const BotMessage = ({ message, renderMarkdown }) => {
     );
 };
 
-// Component for the clickable suggestion cards on the welcome screen
+// Component for the clickable suggestion cards
 const SuggestionCard = ({ title, text, onClick }) => (
   <button onClick={() => onClick(text)} className="bg-surface p-4 rounded-lg text-left w-full hover:bg-secondary/60 transform hover:-translate-y-1 transition-all duration-300 shadow-lg">
     <p className="font-semibold text-text-main">{title}</p>
@@ -43,10 +42,7 @@ const App = () => {
     const messagesEndRef = useRef(null);
     const textareaRef = useRef(null);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
+    const scrollToBottom = () => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); };
     useEffect(() => { scrollToBottom(); }, [messages]);
 
     useEffect(() => {
@@ -57,9 +53,7 @@ const App = () => {
     }, [input]);
 
     useEffect(() => {
-        setMessages([
-            { text: "Hello! I'm an AI assistant designed to help you analyze content for potential misinformation...", isUser: false, sources: [] }
-        ]);
+        setMessages([ { text: "Hello! I'm an AI assistant designed to help you analyze content for potential misinformation...", isUser: false, sources: [] } ]);
     }, []);
     
     const callGeminiAPI = async (text) => {
@@ -67,13 +61,11 @@ const App = () => {
         setError(null);
         const systemPrompt = `You are an expert AI assistant specializing in misinformation detection and media literacy. Your primary function is to analyze user-submitted text for signs of bias, logical fallacies, emotional manipulation, and lack of credible evidence. You must provide a clear, balanced, and educational assessment. Your analysis process MUST follow these steps: 1. **Initial Assessment:** Briefly state the main claim or topic of the text. 2. **Fact-Checking & Sourcing:** Use the integrated Google Search tool to verify key claims. Identify if the text cites credible, primary sources. Note any unsubstantiated claims. 3. **Language and Tone Analysis:** Analyze the text for: * **Emotional Language:** Is the language sensationalized, inflammatory, or designed to evoke a strong emotional response (e.g., fear, anger)? * **Bias and Loaded Words:** Does the text use biased language or present opinions as facts? Is the framing one-sided? * **Logical Fallacies:** Identify any common logical fallacies (e.g., ad hominem attacks, false dichotomies, strawman arguments). 4. **Conclusion & Rating:** Provide a concise conclusion about the text's reliability. Give it a rating: Low Risk, Medium Risk, or High Risk of being misinformation. 5. **Educational Takeaway:** Conclude with a "Media Literacy Tip" section, offering actionable advice based on the specific weaknesses found in the analyzed text. This should educate the user on how to spot similar issues in the future. Structure your response clearly using Markdown for formatting. Be objective and avoid taking a political stance. Your goal is to empower the user with tools to think critically about information.`;
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        
-        // --- THIS IS THE ONLY LINE THAT CHANGED ---
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
         const payload = {
             contents: [{ parts: [{ text: `Please analyze the following text:\n\n---\n\n${text}` }] }],
-            tools: [{ "google_search_retrieval": {} }],
+            // --- THIS "TOOLS" LINE HAS BEEN REMOVED ---
             systemInstruction: { parts: [{ text: systemPrompt }] },
         };
 
@@ -89,6 +81,7 @@ const App = () => {
                 const generatedText = candidate.content.parts[0].text;
                 let sources = [];
                 const groundingMetadata = candidate.groundingMetadata;
+                // Note: The structure for sources might change or not be present without the explicit tool. This is a safe fallback.
                 if (groundingMetadata && groundingMetadata.webSearchQueries) {
                     sources = groundingMetadata.webSearchQueries.map(q => ({ uri: `https://www.google.com/search?q=${encodeURIComponent(q)}`, title: q, }));
                 }
@@ -105,15 +98,13 @@ const App = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
-        const newUserMessage = { text: input, isUser: true, sources: [] };
-        setMessages(prev => [...prev, newUserMessage]);
+        setMessages(prev => [...prev, { text: input, isUser: true, sources: [] }]);
         callGeminiAPI(input);
         setInput('');
     };
     
     const handleSuggestionClick = (text) => {
-      const newUserMessage = { text, isUser: true, sources: [] };
-      setMessages(prev => [...prev, newUserMessage]);
+      setMessages(prev => [...prev, { text, isUser: true, sources: [] }]);
       callGeminiAPI(text);
     };
 
