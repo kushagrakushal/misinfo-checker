@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, User, Search, Loader, AlertTriangle, SendHorizontal } from 'lucide-react';
-import useTypewriter from './useTypewriter'; // Import the new hook
+import useTypewriter from './useTypewriter'; // Make sure this file exists in src/
 
 // A helper component for animating the bot's response with the typewriter effect
 const BotMessage = ({ message, renderMarkdown }) => {
@@ -43,9 +43,6 @@ const App = () => {
     const messagesEndRef = useRef(null);
     const textareaRef = useRef(null);
 
-    // The rest of your App.jsx logic (like callGeminiAPI, handleSubmit, etc.) remains here...
-    // I am pasting the full component for you to replace everything.
-
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -68,9 +65,11 @@ const App = () => {
     const callGeminiAPI = async (text) => {
         setIsLoading(true);
         setError(null);
-        const systemPrompt = `You are an expert AI assistant specializing in misinformation detection...`; // Your excellent prompt here
+        const systemPrompt = `You are an expert AI assistant specializing in misinformation detection and media literacy. Your primary function is to analyze user-submitted text for signs of bias, logical fallacies, emotional manipulation, and lack of credible evidence. You must provide a clear, balanced, and educational assessment. Your analysis process MUST follow these steps: 1. **Initial Assessment:** Briefly state the main claim or topic of the text. 2. **Fact-Checking & Sourcing:** Use the integrated Google Search tool to verify key claims. Identify if the text cites credible, primary sources. Note any unsubstantiated claims. 3. **Language and Tone Analysis:** Analyze the text for: * **Emotional Language:** Is the language sensationalized, inflammatory, or designed to evoke a strong emotional response (e.g., fear, anger)? * **Bias and Loaded Words:** Does the text use biased language or present opinions as facts? Is the framing one-sided? * **Logical Fallacies:** Identify any common logical fallacies (e.g., ad hominem attacks, false dichotomies, strawman arguments). 4. **Conclusion & Rating:** Provide a concise conclusion about the text's reliability. Give it a rating: Low Risk, Medium Risk, or High Risk of being misinformation. 5. **Educational Takeaway:** Conclude with a "Media Literacy Tip" section, offering actionable advice based on the specific weaknesses found in the analyzed text. This should educate the user on how to spot similar issues in the future. Structure your response clearly using Markdown for formatting. Be objective and avoid taking a political stance. Your goal is to empower the user with tools to think critically about information.`;
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+        
+        // --- THIS IS THE ONLY LINE THAT CHANGED ---
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
         const payload = {
             contents: [{ parts: [{ text: `Please analyze the following text:\n\n---\n\n${text}` }] }],
